@@ -22,7 +22,7 @@ int main(int, char**) {
 	
 	for (;;) {
 		if (capture.read(cap_image) == false) {
-			cout << "" <<endl;
+			cout << "Cannot read capture image.Press any key." <<endl;
 			waitKey();
 		}
 		imshow("Stream Viewer", cap_image);
