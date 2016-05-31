@@ -16,134 +16,134 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 
-		Mat first_img = imread("rtest.jpg");
-		Mat grayscaleimage;
-		Mat crop_img;
+	Mat first_img = imread("rtest0.jpg");
+	Mat grayscaleimage;
+	Mat crop_img;
 
-		CascadeClassifier face_cascade;
-		vector<Rect> faces;
+	CascadeClassifier number_cascade;
+	vector<Rect> numbers;
 
-		if (face_cascade.load("./haarcascade_russian_plate_number.xml") == false) {  // Check same .xml file exists in this project holder
-			printf("cascade.load failed!! put the xml file into this project holder\n");
-			waitKey();
-			return -1;
-		}
+	if (number_cascade.load("./haarcascade_russian_plate_number.xml") == false) {  // Check same .xml file exists in this project holder
+		printf("cascade.load failed!! put the xml file into this project holder\n");
+		waitKey();
+		return -1;
+	}
 
-		cvtColor(first_img, grayscaleimage, CV_BGR2GRAY);
-		equalizeHist(grayscaleimage, grayscaleimage);
+	cvtColor(first_img, grayscaleimage, CV_BGR2GRAY);
+	equalizeHist(grayscaleimage, grayscaleimage);
 
-		face_cascade.detectMultiScale(grayscaleimage, faces);
+	number_cascade.detectMultiScale(grayscaleimage, numbers);
 
-		for (int i = 0; i < (int)faces.size(); i++)
-		{
-			Scalar color(0, 0, 255);
-			Point pt1(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
-			Point pt2(faces[i].x, faces[i].y);
+	for (int i = 0; i < (int)numbers.size(); i++)
+	{
+		Scalar color(0, 0, 255);
+		Point pt1(numbers[i].x + numbers[i].width, numbers[i].y + numbers[i].height);
+		Point pt2(numbers[i].x, numbers[i].y);
 
-			rectangle(first_img, pt1, pt2, color, 1, 8, 0);
+		rectangle(first_img, pt1, pt2, color, 1, 8, 0);
 
-			// Put text to point1(pt1)
-			int pt1x = (faces[i].x + faces[i].width);
-			int pt1y = (faces[i].y + faces[i].height);
-			string text_point1 = "Point1(" + to_string(pt1x) + "," + to_string(pt1y) + ")";
+		// Put text to point1(pt1)
+		int pt1x = (numbers[i].x + numbers[i].width);
+		int pt1y = (numbers[i].y + numbers[i].height);
+		string text_point1 = "Point1(" + to_string(pt1x) + "," + to_string(pt1y) + ")";
 
-			// Put text to point2(pt2)
-			int pt2x = (faces[i].x);
-			int pt2y = (faces[i].y);
-			string text_point2 = "Point2(" + to_string(pt2x) + "," + to_string(pt2y) + ")";
+		// Put text to point2(pt2)
+		int pt2x = (numbers[i].x);
+		int pt2y = (numbers[i].y);
+		string text_point2 = "Point2(" + to_string(pt2x) + "," + to_string(pt2y) + ")";
 
-			// Draw text in the image
-			putText(first_img, text_point1, Point(pt1x - 100, pt1y + 15), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 1, CV_AA);
-			putText(first_img, text_point2, Point(pt2x - 20, pt2y - 5), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 1, CV_AA);
+		// Draw text in the image
+		putText(first_img, text_point1, Point(pt1x - 100, pt1y + 15), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 1, CV_AA);
+		putText(first_img, text_point2, Point(pt2x - 20, pt2y - 5), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 1, CV_AA);
 
-			// Cut rectangle image and out put the image
-			Mat rect_img(first_img, Rect(pt1, pt2));
-			imwrite("rect1.jpg", rect_img);
-		}
+		// Cut rectangle image and out put the image
+		Mat rect_img(first_img, Rect(pt1, pt2));
+		imwrite("rect1.jpg", rect_img);
+	}
 
-		// Show image of rectangle number plate
-		namedWindow("Rectangle image", WINDOW_AUTOSIZE | WINDOW_FREERATIO);
-		Mat rect_plate = imread("rect1.jpg");
-		imshow("Rectangle image", rect_plate);
+	// Show image of rectangle number plate
+	namedWindow("Rectangle image", WINDOW_AUTOSIZE | WINDOW_FREERATIO);
+	Mat rect_plate = imread("rect1.jpg");
+	imshow("Rectangle image", rect_plate);
 
-		//Put plate color into gray
-		Mat plate_gray;
-		cvtColor(rect_plate, plate_gray, CV_BGR2GRAY);
-		//medianBlur(plate_gray, plate_gray, 3);
-		threshold(plate_gray, plate_gray, 0, 255, CV_THRESH_OTSU);
-		equalizeHist(plate_gray, plate_gray);
-		bitwise_not(plate_gray, plate_gray);
-		imshow("grayed image", plate_gray);
+	//Put plate color into gray
+	Mat plate_gray;
+	cvtColor(rect_plate, plate_gray, CV_BGR2GRAY);
+	//medianBlur(plate_gray, plate_gray, 3);
+	threshold(plate_gray, plate_gray, 0, 255, CV_THRESH_OTSU);
+	equalizeHist(plate_gray, plate_gray);
+	bitwise_not(plate_gray, plate_gray);
+	imshow("grayed image", plate_gray);
 
-		//Gray image make dilation and erosion
-		Mat plate_dilated;
-		dilate(plate_gray, plate_dilated,Mat(),Point(-1,-1),1);
-		erode(plate_dilated, plate_dilated, Mat(),Point(-1,-1),2);
-		imshow("dilated image", plate_dilated);
-		imwrite("dilated.jpg", plate_dilated);
+	//Gray image make dilation and erosion
+	Mat plate_dilated;
+	dilate(plate_gray, plate_dilated, Mat(), Point(-1, -1), 1);
+	erode(plate_dilated, plate_dilated, Mat(), Point(-1, -1), 2);
+	imshow("dilated image", plate_dilated);
+	imwrite("dilated.jpg", plate_dilated);
 
-		//Correcting rotation image
+	//Correcting rotation image
 
-		//Mat input = imread("rect1.jpg");
-		//cvtColor(input, input, CV_BGR2GRAY);
-		//Mat img;
-		//threshold(input, img, 100, 255, cv::THRESH_OTSU);
+	//Mat input = imread("rect1.jpg");
+	//cvtColor(input, input, CV_BGR2GRAY);
+	//Mat img;
+	//threshold(input, img, 100, 255, cv::THRESH_OTSU);
 
-		//bitwise_not(img, img);
-		//imshow("img ", img);
+	//bitwise_not(img, img);
+	//imshow("img ", img);
 
-		//vector<Point> points;
-		//findNonZero(img, points);
-		//RotatedRect box = minAreaRect(points);
+	//vector<Point> points;
+	//findNonZero(img, points);
+	//RotatedRect box = minAreaRect(points);
 
-		//double angle = box.angle;
-		//if (angle < -45.)
-		//	angle += 90.;
+	//double angle = box.angle;
+	//if (angle < -45.)
+	//	angle += 90.;
 
-		//Point2f vertices[4];
-		//box.points(vertices);
-		//for (int i = 0; i < 4; ++i)
-		//	line(img, vertices[i], vertices[(i + 1) % 4], cv::Scalar(255, 0, 0));
+	//Point2f vertices[4];
+	//box.points(vertices);
+	//for (int i = 0; i < 4; ++i)
+	//	line(img, vertices[i], vertices[(i + 1) % 4], cv::Scalar(255, 0, 0));
 
-		//imshow("img ", img);
-		//imwrite("otsu.jpg", img);
+	//imshow("img ", img);
+	//imwrite("otsu.jpg", img);
 
-		//find contour
-		vector<vector<Point> > contours;
-		vector<Vec4i> hierarchy;
-		findContours(plate_dilated, contours, hierarchy, RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+	//find contour
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(plate_dilated, contours, hierarchy, RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 
-		//Boounding contour
+	//Boounding contour
 
-		vector<vector<Point> > contours_poly(contours.size());
-		vector<Rect> boundRect(contours.size());
-		vector<Point2f>center(contours.size());
-		vector<float>radius(contours.size());
+	vector<vector<Point> > contours_poly(contours.size());
+	vector<Rect> boundRect(contours.size());
+	vector<Point2f>center(contours.size());
+	vector<float>radius(contours.size());
 
-		for (int i = 0; i < contours.size(); i++)
-		{
-			approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
-			boundRect[i] = boundingRect(Mat(contours_poly[i]));
-			minEnclosingCircle((Mat)contours_poly[i], center[i], radius[i]);
-		}
-
-
-		/// Draw polygonal contour + bonding rects + circles
-		Mat drawing = Mat::zeros(plate_dilated.size(), CV_8UC3);
-		for (int i = 0; i < contours.size(); i++){
-			Scalar color = Scalar(0, 255, 0);
-			rectangle(rect_plate, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
-		}
-
-		imshow("Bounding image", rect_plate);
+	for (int i = 0; i < contours.size(); i++)
+	{
+		approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
+		boundRect[i] = boundingRect(Mat(contours_poly[i]));
+		minEnclosingCircle((Mat)contours_poly[i], center[i], radius[i]);
+	}
 
 
-		//	BoundingRect(plate_dilated, );
+	// Draw polygonal contour + bonding rects + circles
+	Mat drawing = Mat::zeros(plate_dilated.size(), CV_8UC3);
+	for (int i = 0; i < contours.size(); i++){
+		Scalar color = Scalar(0, 255, 0);
+		rectangle(rect_plate, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
+	}
 
-		namedWindow("Detected Image", WINDOW_AUTOSIZE);
-		imshow("Detected Image", first_img);
-		waitKey(0);
-		destroyAllWindows();
-		return 0;
-	
+	imshow("Bounding image", rect_plate);
+
+
+	//	BoundingRect(plate_dilated, );
+
+	namedWindow("Detected Image", WINDOW_AUTOSIZE);
+	imshow("Detected Image", first_img);
+	waitKey(0);
+	destroyAllWindows();
+	return 0;
+
 }
