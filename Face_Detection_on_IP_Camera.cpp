@@ -20,10 +20,10 @@ int main(int, char**)
 	Mat image;
 	Mat gray;
 
-	string uname = "root";   // User name of Network Camera. Most of IP camera set username as "root" .
-	string password = "abc123";   // Password of your Network Camera
+	char uname = "root";   // User name of Network Camera. Most of IP camera set username as "root" .
+	char password = "abc123";   // Password of your Network Camera
 
-	string ip_address = "http://" + uname + ":" + password + "@169.123.0.100/mjpg/video.mjpg";   // Input IP address of your Network Camera.
+	char ip_address = "http://" + uname + ":" + password + "@169.123.0.100/mjpg/video.mjpg";   // Input IP address of your Network Camera.
 
 	if (capture.open(ip_address) == false) {
 		cout << "Cannot connect IP camera! Check Your Camera Connection." << endl;
