@@ -53,11 +53,11 @@ int main(int, char**)
 				Point pt1(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
 				Point pt2(faces[i].x, faces[i].y);
 				rectangle(image, pt1, pt2, color, 1, 8, 0);
-    		}
+    	         	}
 
 			imshow("grayscale_frame", gray);
 			imshow("Detecting Face Streaming", image);
 			if (waitKey(1) >= 0) break;
-    }
+        }
 	return 0;
 }
