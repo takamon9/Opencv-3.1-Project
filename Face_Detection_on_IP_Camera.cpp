@@ -22,7 +22,6 @@ int main(int, char**)
 
 	char uname = "root";   // User name of Network Camera. Most of IP camera set username as "root" .
 	char password = "abc123";   // Password of your Network Camera
-
 	char ip_address = "http://" + uname + ":" + password + "@169.123.0.100/mjpg/video.mjpg";   // Input IP address of your Network Camera.
 
 	if (capture.open(ip_address) == false) {
