@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <stdio.h>
 #include <opencv2\core\core.hpp>
 #include <opencv2\highgui\highgui.hpp>
@@ -16,7 +18,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 
-	Mat first_img = imread("rtest0.jpg");
+	Mat first_img = imread("rtest1.jpg");
 	Mat grayscaleimage;
 	Mat crop_img;
 
@@ -30,7 +32,6 @@ int main(int argc, char *argv[])
 	}
 
 	cvtColor(first_img, grayscaleimage, CV_BGR2GRAY);
-	equalizeHist(grayscaleimage, grayscaleimage);
 
 	number_cascade.detectMultiScale(grayscaleimage, numbers);
 
@@ -65,48 +66,53 @@ int main(int argc, char *argv[])
 	namedWindow("Rectangle image", WINDOW_AUTOSIZE | WINDOW_FREERATIO);
 	Mat rect_plate = imread("rect1.jpg");
 	imshow("Rectangle image", rect_plate);
+	Mat rectangle_number;
+	cvtColor(rect_plate, rectangle_number, CV_BGR2GRAY);
 
 	//Put plate color into gray
 	Mat plate_gray;
 	cvtColor(rect_plate, plate_gray, CV_BGR2GRAY);
-	//medianBlur(plate_gray, plate_gray, 3);
-	threshold(plate_gray, plate_gray, 0, 255, CV_THRESH_OTSU);
+	blur(plate_gray, plate_gray,Point(1,1));
 	equalizeHist(plate_gray, plate_gray);
-	bitwise_not(plate_gray, plate_gray);
+	threshold(plate_gray, plate_gray, 60, 255, CV_THRESH_BINARY_INV);
+
+	//bitwise_not(plate_gray, plate_gray);
 	imshow("grayed image", plate_gray);
 
 	//Gray image make dilation and erosion
 	Mat plate_dilated;
-	dilate(plate_gray, plate_dilated, Mat(), Point(-1, -1), 1);
-	erode(plate_dilated, plate_dilated, Mat(), Point(-1, -1), 2);
-	imshow("dilated image", plate_dilated);
+
+	dilate(plate_gray, plate_dilated, Mat(), Point(-1, -1),2);
+	erode(plate_dilated, plate_dilated, Mat(), Point(-1, -1),2);
+	imshow("dilated image", plate_dilated|CV_WINDOW_AUTOSIZE);
 	imwrite("dilated.jpg", plate_dilated);
 
-	//Correcting rotation image
+	/******Correcting rotation image**********************************************************
 
-	//Mat input = imread("rect1.jpg");
-	//cvtColor(input, input, CV_BGR2GRAY);
-	//Mat img;
-	//threshold(input, img, 100, 255, cv::THRESH_OTSU);
+	Mat input = imread("rect1.jpg");
+	cvtColor(input, input, CV_BGR2GRAY);
+	Mat img;
+	threshold(input, img, 100, 255, cv::THRESH_OTSU);
 
-	//bitwise_not(img, img);
-	//imshow("img ", img);
+	bitwise_not(img, img);
+	imshow("img ", img);
 
-	//vector<Point> points;
-	//findNonZero(img, points);
-	//RotatedRect box = minAreaRect(points);
+	vector<Point> points;
+	findNonZero(img, points);d
+	RotatedRect box = minAreaRect(points);
 
-	//double angle = box.angle;
-	//if (angle < -45.)
-	//	angle += 90.;
+	double angle = box.angle;
+	if (angle < -45.)
+		angle += 90.;
 
-	//Point2f vertices[4];
-	//box.points(vertices);
-	//for (int i = 0; i < 4; ++i)
-	//	line(img, vertices[i], vertices[(i + 1) % 4], cv::Scalar(255, 0, 0));
+	Point2f vertices[4];
+	box.points(vertices);
+	for (int i = 0; i < 4; ++i)
+		line(img, vertices[i], vertices[(i + 1) % 4], cv::Scalar(255, 0, 0));
 
-	//imshow("img ", img);
-	//imwrite("otsu.jpg", img);
+	imshow("img ", img);
+	imwrite("otsu.jpg", img);
+	****************************************************************************************************/
 
 	//find contour
 	vector<vector<Point> > contours;
@@ -130,18 +136,36 @@ int main(int argc, char *argv[])
 
 	// Draw polygonal contour + bonding rects + circles
 	Mat drawing = Mat::zeros(plate_dilated.size(), CV_8UC3);
+	float aspect_ratio;
+
+
 	for (int i = 0; i < contours.size(); i++){
-		Scalar color = Scalar(0, 255, 0);
-		rectangle(rect_plate, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
+		if (boundRect[i].height > 10){
+			aspect_ratio = (float)boundRect[i].width / boundRect[i].height;
+			if (aspect_ratio >= 0.45 && aspect_ratio <= 0.75){
+				stringstream filename;
+				filename << "rectangle_number" << setw(3) << setfill('0') << i << ".jpg";
+				Scalar color = Scalar(0, 255, 0);
+				rectangle(rect_plate, boundRect[i].tl(), boundRect[i].br(), color, 1, 8, 0);
+				Point px(boundRect[i].x + boundRect[i].width+3, boundRect[i].y + boundRect[i].height+3);
+				Point py(boundRect[i].x-3, boundRect[i].y-3);
+				Mat extract_image(rectangle_number, Rect(px, py));
+				imwrite(filename.str(), extract_image);
+				cout << "Aspect Ratio: " << aspect_ratio << endl;
+
+			}
+		}
 	}
 
 	imshow("Bounding image", rect_plate);
 
 
+	
+
 	//	BoundingRect(plate_dilated, );
 
 	namedWindow("Detected Image", WINDOW_AUTOSIZE);
-	imshow("Detected Image", first_img);
+	imshow("Detected Image", first_img|CV_WINDOW_AUTOSIZE);
 	waitKey(0);
 	destroyAllWindows();
 	return 0;
