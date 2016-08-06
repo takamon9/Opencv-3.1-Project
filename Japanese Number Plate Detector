@@ -10,10 +10,10 @@ using namespace std;
 
 void connectIpCamera();
 int readImage();
-void convertBlur();
+void convertGrayscale();
 void morphologyOperate1();
 void morphologyOperate2();
-void blackHat();
+void dilationImage();
 void sobelOperate();
 void binaryOtsuImage();
 void countRowsCols();
@@ -23,13 +23,13 @@ void findingContours();
 void mergeImage();
 
 VideoCapture capture;
-Mat first_image;
+Mat original_image;
 Mat grayscaleimage;
 Mat binary1,binary2, equalize;
 Mat temp_img, sobelImage;
 Mat binaryOtsu;
-Mat morpho,mergedCanny,binaryInverted;
-Mat firstMerge;
+Mat morpho,resultMerge,binaryInverted;
+Mat firstMerge,binaryMerged;
 
 
 
@@ -40,27 +40,27 @@ int main(int argc, char *argv[]){
 
 	for (;;){
 
-	readImage();
+		readImage();
 
-	convertBlur();
+		convertGrayscale();
 
-//	countRowsCols();
+//		countRowsCols();
 
-//	blackHat();
+//		morphologyOperate1();
 
-	binaryOtsuImage();
+//		morphologyOperate2();
 
-//	morphologyOperate1();
+		binaryOtsuImage();
 
-//	morphologyOperate2();
+	 	sobelOperate();
 
-//	sobelOperate();
+		mergeImage();
 
-//	mergeImage();
+//		dilationImage();
 
-	findingContours();
+		findingContours();
 
-	if (waitKey(1) >= 0) break;
+		if (waitKey(1) >= 0) break;
 
 	}
 
@@ -75,8 +75,8 @@ int main(int argc, char *argv[]){
 void connectIpCamera(){
 
 	string uname = "root";
-	string password = "*****";
-	string ip_address = "http://" + uname + ":" + password + "@169.254.25.1/mjpg/video.mjpg"; // Axis Ip Camera
+	string password = "****";
+	string ip_address = "http://" + uname + ":" + password + "@169.254.25.***/mjpg/video.mjpg";
 
 	if (capture.open(ip_address) == false) {
 		cout << "Cannot connect IP camera! Check Your Camera Connection." << endl;
@@ -85,7 +85,7 @@ void connectIpCamera(){
 }
 
 int readImage(){
-	if (capture.read(first_image) == false){
+	if (capture.read(original_image) == false){
 		return -1;
 	}
 }
@@ -111,19 +111,17 @@ void morphologyOperate2(){
 	imshow("binary2", binary2);
 
 }
-void blackHat(){
+void dilationImage(){
 	
-	int morph_size = 2;
+	int morph_size = 5;
 	Mat element = getStructuringElement(MORPH_RECT, Size(2 * morph_size + 1, 2 * morph_size + 1), Point(morph_size, morph_size));
-	morphologyEx(grayscaleimage, morpho, MORPH_CLOSE, element, Point(-1, -1));
+	morphologyEx(binaryMerged, morpho, MORPH_DILATE, element, Point(-1, -1));
 	imshow("morpho", morpho);
-	imwrite("morphology_img.jpg", morpho);
+//	imwrite("morphology_img.jpg", morpho);
 }
 
-void convertBlur(){
-	Mat blur;
-	GaussianBlur(first_image, blur, Size(3, 3), 0, 0, BORDER_DEFAULT);
-	cvtColor(blur, grayscaleimage, CV_BGR2GRAY);
+void convertGrayscale(){
+	cvtColor(original_image, grayscaleimage, CV_BGR2GRAY);
 	equalizeHist(grayscaleimage, equalize);
 //	imshow("gray image", grayscaleimage);
 	imshow("equalize", equalize);
@@ -131,33 +129,35 @@ void convertBlur(){
 
 
 void binaryOtsuImage(){
-	threshold(equalize, binaryOtsu, 0, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
+	threshold(equalize, binaryOtsu, 128, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
 	imshow("otsu", binaryOtsu);
 }
 
 
 void mergeImage(){
 
-	firstMerge = binary1.clone();
-	Mat resultMerge = (equalize | binaryOtsu);
-	Canny(resultMerge,mergedCanny,250,3,3);
-	imshow("merged_image", resultMerge);
-	imshow("mergedCanny", mergedCanny);
+	Mat firstMerge = binaryOtsu.clone();
+	Mat resultMerge = (firstMerge | sobelImage);
+	threshold(resultMerge, binaryMerged, 100, 255, CV_THRESH_BINARY);
+	imshow("merged_image",  binaryMerged);
 }
 
 void sobelOperate(){
 
-	Sobel(equalize, temp_img, CV_32F, 1, 0);
+	Sobel(grayscaleimage, temp_img, CV_32F, 1, 0);
 	convertScaleAbs(temp_img, sobelImage, 1, 1);
 	imshow("sobel", sobelImage);
 }
 void findingContours(){
+
+	Mat canny_src = binaryMerged;
+
 	Mat canny_output;
 
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 
-	Canny(binaryOtsu, canny_output, 250, 3, 3);
+	Canny(canny_src, canny_output, 255, 3, 3);
 	imshow("canny_image", canny_output);
 
 	/// Find contours
@@ -168,7 +168,7 @@ void findingContours(){
 	vector<Point2f>center(contours.size());
 	vector<float>radius(contours.size());
 
-	Mat rectangles = grayscaleimage.clone();
+	Mat rectangles = original_image.clone();
 	Mat drawing = Mat::zeros(canny_output.size(), CV_8UC3);
 	Scalar color = Scalar(255, 255, 0);
 
@@ -182,18 +182,18 @@ void findingContours(){
 
 		float aspectRatio = (float)boundRect[i].width / boundRect[i].height;
 
-			if (boundRect[i].height > 30 && boundRect[i].width > 55 && aspectRatio > 1.8 && aspectRatio < 2.2){
+			if (boundRect[i].height > 40 && boundRect[i].width > 80 && aspectRatio > 1.85 && aspectRatio < 2.15){
 
 //					drawContours(drawing, contours_poly, (int)i, color, 1, 8, vector<Vec4i>(), 0, Point());
 					rectangle(drawing, boundRect[i].tl(), boundRect[i].br(), color, 1, 8, 0);
-					rectangle(first_image, boundRect[i].tl(), boundRect[i].br(), color, 1, 8, 0);
+					rectangle(original_image, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
 //					circle(drawing, center[i], (int)radius[i], color, 2, 8, 0);
 
 			}
         }
 //	cout << contours.size() << endl;
 //	imshow("Contours", drawing);
-	imshow("contours_result", first_image);
+	imshow("contours_result", original_image);
 }
 void countBlackPixelsX(){
 	int x, y;
