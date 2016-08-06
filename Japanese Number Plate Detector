@@ -76,7 +76,7 @@ void connectIpCamera(){
 
 	string uname = "root";
 	string password = "****";
-	string ip_address = "http://" + uname + ":" + password + "@169.254.25.***/mjpg/video.mjpg";
+	string ip_address = "http://" + uname + ":" + password + "@169.254.***.1/mjpg/video.mjpg";
 
 	if (capture.open(ip_address) == false) {
 		cout << "Cannot connect IP camera! Check Your Camera Connection." << endl;
@@ -124,7 +124,7 @@ void convertGrayscale(){
 	cvtColor(original_image, grayscaleimage, CV_BGR2GRAY);
 	equalizeHist(grayscaleimage, equalize);
 //	imshow("gray image", grayscaleimage);
-	imshow("equalize", equalize);
+//	imshow("equalize", equalize);
 }
 
 
@@ -138,9 +138,10 @@ void mergeImage(){
 
 	Mat firstMerge = binaryOtsu.clone();
 	Mat resultMerge = (firstMerge | sobelImage);
-	threshold(resultMerge, binaryMerged, 100, 255, CV_THRESH_BINARY);
+	threshold(resultMerge, binaryMerged, 90, 255, CV_THRESH_BINARY);
 	imshow("merged_image",  binaryMerged);
 }
+
 
 void sobelOperate(){
 
@@ -148,6 +149,9 @@ void sobelOperate(){
 	convertScaleAbs(temp_img, sobelImage, 1, 1);
 	imshow("sobel", sobelImage);
 }
+
+
+
 void findingContours(){
 
 	Mat canny_src = binaryMerged;
