@@ -198,6 +198,12 @@ void findingContours(){
 					rectangle(rectanglesImage, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
 //					circle(drawing, center[i], (int)radius[i], color, 2, 8, 0);
 
+					string textPointXy = "(" + to_string(boundRect[i].x) + " , " + to_string(boundRect[i].y) + ")";
+					string textPointWH = "(" + to_string(boundRect[i].x + boundRect[i].width) + " , " + to_string(boundRect[i].y + boundRect[i].height) + ")";
+
+					putText(rectanglesImage, textPointXy, Point(boundRect[i].x-10, boundRect[i].y-10), FONT_HERSHEY_SIMPLEX,0.5, Scalar(255, 255, 255), 1,CV_AA);
+					putText(rectanglesImage, textPointWH, Point(boundRect[i].x + boundRect[i].width + 10, boundRect[i].y + boundRect[i].height +  + 10), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, CV_AA);
+
 			}
         }
 //	cout << contours.size() << endl;
