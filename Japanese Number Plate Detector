@@ -27,9 +27,10 @@ Mat original_image;
 Mat grayscaleimage;
 Mat binary1,binary2, equalize;
 Mat temp_img, sobelImage;
-Mat binaryOtsu;
+Mat binaryOtsu,plateCanditate;
 Mat morpho,resultMerge,binaryInverted;
 Mat firstMerge,binaryMerged;
+Mat histogramX, histogramY, binaryHistX, binaryCanditate;
 
 
 int main(int argc, char *argv[]){
@@ -144,7 +145,7 @@ void sobelOperate(){
 void binaryOtsuImage(){
 
 	threshold(equalize, binaryOtsu, 128, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
-	imshow("otsu", binaryOtsu);
+//	imshow("otsu", binaryOtsu);
 }
 
 
@@ -167,9 +168,9 @@ void findingContours(){
 	vector<Vec4i> hierarchy;
 
 	Canny(canny_src, canny_output, 255, 3, 3);
-	imshow("canny_image", canny_output);
+//	imshow("canny_image", canny_output);
 
-	/// Find contours
+	// Find contours
 	findContours(canny_output, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
 	vector<vector<Point> > contours_poly(contours.size());
@@ -180,8 +181,6 @@ void findingContours(){
 	Mat rectanglesImage = original_image.clone();
 	Mat drawing = Mat::zeros(canny_output.size(), CV_8UC3);
 	Scalar color = Scalar(255, 255, 0);
-
-
 
 	for (size_t i = 0; i < contours.size(); i++){
 
@@ -194,50 +193,98 @@ void findingContours(){
 			if (boundRect[i].height > 40 && boundRect[i].width > 80 && aspectRatio > 1.85 && aspectRatio < 2.15){
 
 //					drawContours(drawing, contours_poly, (int)i, color, 1, 8, vector<Vec4i>(), 0, Point());
-					rectangle(drawing, boundRect[i].tl(), boundRect[i].br(), color, 1, 8, 0);
-					rectangle(rectanglesImage, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
+//					rectangle(drawing, boundRect[i].tl(), boundRect[i].br(), color, 1, 8, 0);
 //					circle(drawing, center[i], (int)radius[i], color, 2, 8, 0);
 
-					string textPointXy = "(" + to_string(boundRect[i].x) + " , " + to_string(boundRect[i].y) + ")";
-					string textPointWH = "(" + to_string(boundRect[i].x + boundRect[i].width) + " , " + to_string(boundRect[i].y + boundRect[i].height) + ")";
+					Rect rectImage(boundRect[i].x, boundRect[i].y,  boundRect[i].width,  boundRect[i].height);
+					Mat plateCanditate(grayscaleimage,(rectImage));
+					threshold(plateCanditate, binaryCanditate, 170,255,CV_THRESH_OTSU);
 
-					putText(rectanglesImage, textPointXy, Point(boundRect[i].x-10, boundRect[i].y-10), FONT_HERSHEY_SIMPLEX,0.5, Scalar(255, 255, 255), 1,CV_AA);
-					putText(rectanglesImage, textPointWH, Point(boundRect[i].x + boundRect[i].width + 10, boundRect[i].y + boundRect[i].height +  + 10), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, CV_AA);
 
-			}
+
+					int xx, xy;
+					float averageX,blackPixelRtioX;
+
+					Mat histogramX = Mat(Size(plateCanditate.cols, plateCanditate.rows), CV_8UC3, Scalar(255, 255, 255));
+
+					float sumX = 0;
+
+					for (xx = 0; xx < binaryCanditate.cols; xx++){
+
+						int blackX = 0;
+						
+							for (xy = 0; xy < binaryCanditate.rows; xy++){
+
+							int intensity = binaryCanditate.at<uchar>(Point(xx, xy));
+							if (intensity == 0){
+
+								blackX += 1;
+								
+							}
+							
+						}
+
+						line(histogramX, Point(xx, 0), Point(xx, blackX), Scalar(255, 0, 0), 1);
+						sumX += blackX;
+					}
+
+					averageX = sumX / plateCanditate.cols;
+					blackPixelRtioX = (averageX / plateCanditate.cols) * 100;
+//					    cout << averageX << "(" << blackPixelRtioX << " % )" << endl;
+
+
+
+					if (blackPixelRtioX > 8.5 && blackPixelRtioX < 13.5){
+						int yx, yy;
+
+						float averageY, blackPixelRtioY;
+						Mat histogramY = Mat(Size(plateCanditate.cols, plateCanditate.rows), CV_8UC3, Scalar(255, 255, 255));
+
+						float sumY = 0;
+
+						for (yy = 0; yy < binaryCanditate.rows; yy++){
+
+							int blackY = 0;
+
+							for (yx = 0; yx < binaryCanditate.cols; yx++){
+
+								int intensity = binaryCanditate.at<uchar>(Point(yx, yy));
+								if (intensity == 0){
+
+									blackY += 1;
+
+								}
+							}
+
+							line(histogramY, Point(0, yy), Point(blackY, yy), Scalar(255, 0, 0), 1);
+							sumY += blackY;
+						}
+						averageY = sumY / plateCanditate.cols;
+						blackPixelRtioY = (averageY / plateCanditate.cols) * 100;
+						cout << averageY << "(" << blackPixelRtioY << " % )" << endl;
+
+
+						if (blackPixelRtioY > 10.0 && blackPixelRtioY < 12.5){
+
+							rectangle(rectanglesImage, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
+							imshow("histogramX.jpg", histogramX);
+							imshow("histogramY", histogramY);
+							imshow("plateCanditate", plateCanditate);
+							imwrite("plateCanditate.jpg", plateCanditate);
+							imshow("binaryCanditate", binaryCanditate);
+
+							string textPointXy = "(" + to_string(boundRect[i].x) + " , " + to_string(boundRect[i].y) + ")";
+							string textPointWH = "(" + to_string(boundRect[i].x + boundRect[i].width) + " , " + to_string(boundRect[i].y + boundRect[i].height) + ")";
+
+							putText(rectanglesImage, textPointXy, Point(boundRect[i].x - 10, boundRect[i].y - 10), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, CV_AA);
+							putText(rectanglesImage, textPointWH, Point(boundRect[i].x + boundRect[i].width + 10, boundRect[i].y + boundRect[i].height + 10), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, CV_AA);
+						}
+					}
+					}
         }
-//	cout << contours.size() << endl;
+
 //	imshow("Contours", drawing);
 	imshow("contours_result", rectanglesImage);
-}
-void countBlackPixelsX(){
-	int x, y;
-	Mat histogramX = Mat(Size(binary1.cols, binary1.rows), CV_8UC3, Scalar(255, 255, 255));
-	for (x = 0; x < binary1.cols; x++){
-		int black = 0;
-		for (y = 0; y < binary1.rows; y++){
-			int intensity = binary1.at<uchar>(Point(x, y));
-			if (intensity == 0){
-				black += 1;
-			}
-		}
-		line(histogramX, Point(x, 0), Point(x, black), Scalar(255, 0, 0), 1);
-	}
-	imshow("histogramX", histogramX);
+
 }
 
-void countBlackPixelsY(){
-	int x, y;
-	Mat histogramY = Mat(Size(binary1.cols, binary1.rows), CV_8UC3, Scalar(255, 255, 255));
-	for (y = 0; y < binary1.rows; y++){
-		int black = 0;
-		for (x = 0; x < binary1.cols; x++){
-			int intensity = binary1.at<uchar>(Point(x, y));
-			if (intensity == 0){
-				black += 1;
-			}
-		}
-		line(histogramY, Point(0, y), Point(black, y), Scalar(255, 0, 0), 1);
-	}
-	imshow("histogramY", histogramY);
-}
