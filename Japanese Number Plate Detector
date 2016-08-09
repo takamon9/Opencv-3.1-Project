@@ -146,7 +146,7 @@ void sobelOperate(){
 
 void binaryOtsuImage(){
 
-	threshold(equalize, binaryOtsu, 128,255,CV_THRESH_BINARY | CV_THRESH_OTSU);
+	threshold(equalize, binaryOtsu, 0,255,CV_THRESH_BINARY | CV_THRESH_OTSU);
 //	imshow("otsu", binaryOtsu);
 }
 
@@ -200,7 +200,9 @@ void findingContours(){
 
 				Rect rectImage(boundRect[i].x, boundRect[i].y, boundRect[i].width, boundRect[i].height);
 				Mat plateCanditate(grayscaleimage, (rectImage));
-				threshold(plateCanditate, binaryCanditate, 170, 255, CV_THRESH_OTSU);
+
+				GaussianBlur(plateCanditate, plateCanditate, Size(1, 1), 0);
+				threshold(plateCanditate, binaryCanditate, 0, 255, CV_THRESH_OTSU);
 
 
 				int xx, xy;
