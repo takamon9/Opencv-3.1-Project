@@ -323,8 +323,11 @@ void findingContours(){
 													imshow("plateCanditate", plateCanditate);
 							 						imwrite("plateCanditate.jpg", plateCanditate);
 													imwrite("plateCanditateBinary.jpg", binaryCanditate);
-													imshow("binaryCanditate", binaryCanditate);
+							//						imshow("binaryCanditate", binaryCanditate);
+							
 													charBoundRect();
+						
+													
 							//						string textPointXy = "(" + to_string(minRect[i].size.width) + " , " + to_string(minRect[i].size.height) + ")";
 							//						string textPointWH = "(" + to_string(boundRect[i].x + boundRect[i].width) + " , " + to_string(boundRect[i].y + boundRect[i].height) + ")";
 
@@ -362,26 +365,50 @@ void charBoundRect(){
 
 
 	// Find contours
-
+	 
 	findContours(canyCharImage, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
 	vector<vector<Point> > contours_poly(contours.size());
 	vector<Rect> boundRect(contours.size());
 	Scalar color = Scalar(255, 255, 0);
 
+	float leftSide = (float)canyCharImage.cols * 0.0601;
+	float topLine = (float)canyCharImage.rows * 0.363;
+	float rightSideKatakana = (float)canyCharImage.cols * 0.196;
+	float upperCharTopLine = (float)canyCharImage.rows * 0.0606;
+
+
 	for (size_t i = 0; i < contours.size(); i++){
 		approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
 		boundRect[i] = boundingRect(Mat(contours_poly[i]));
-
+		
+		float charXPointRatio =(float) boundRect[i].x / canyCharImage.cols;
 		float charAngles = (float) boundRect[i].width / boundRect[i].height;
 
 		if (charAngles > 0.4 && charAngles < 0.6 && boundRect[i].width > 10 && boundRect[i].height > 20){
 
-			rectangle(char_output, boundRect[i].tl(), boundRect[i].br(), color, 1, 8, 0);
+			if (charXPointRatio > 0.718  && charXPointRatio < 0.918){
 
-			imshow("finalcharRectangleImage", char_output);
+				Rect Digit(rightSideKatakana, topLine, boundRect[i].x + boundRect[i].width + 5 - rightSideKatakana, boundRect[i].y + 15);
+				Mat digitRoi = char_output(Digit);
+				imwrite("4_digit_number.jpg", digitRoi);
 
-			float aspect_ratio;
+				Rect kana(leftSide - 5, topLine + 5, rightSideKatakana-leftSide + 5 , boundRect[i].y + 5);
+				Mat katakana = char_output(kana);
+				imwrite("katakana.jpg", katakana);
+				
+				Rect riku(rightSideKatakana - 5, upperCharTopLine - 5, boundRect[i].x-rightSideKatakana, topLine);
+				Mat rikuUnNum = char_output(riku);
+				imwrite("rikuUnNum.jpg", rikuUnNum); 
+
+				rectangle(char_output, Point(rightSideKatakana, topLine), Point(boundRect[i].x + boundRect[i].width + 5, topLine + boundRect[i].height + 7), Scalar(255, 255, 0), 2, 8, 0);
+				rectangle(char_output, Point(leftSide - 5, topLine + 5), Point(rightSideKatakana, topLine + boundRect[i].height + 5), Scalar(255, 255, 0), 2, 8, 0);
+				rectangle(char_output, Point(rightSideKatakana - 5, upperCharTopLine - 5), Point(boundRect[i].x, topLine), Scalar(255, 255, 0), 2, 8, 0);
+
+				imshow("finalcharRectangleImage", char_output);
+
+				float aspect_ratio;
+			}
 		}
 	}
 
