@@ -77,8 +77,8 @@ int main(int argc, char *argv[]){
 void connectIpCamera(){
 
 	string uname = "root";
-	string password = "taka1974";
-	string ip_address = "http://" + uname + ":" + password + "@169.254.25.1/mjpg/video.mjpg";
+	string password = "****";
+	string ip_address = "http://" + uname + ":" + password + "@169.254.***.1/mjpg/video.mjpg";
 
 	if (capture.open(ip_address) == false) {
 		cout << "Cannot connect IP camera! Check Your Camera Connection." << endl;
