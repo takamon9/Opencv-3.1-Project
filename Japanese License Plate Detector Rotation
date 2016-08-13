@@ -356,6 +356,7 @@ void charBoundRect(){
 	Mat char_output = charImage.clone();
 	Mat canyCharImage;
 
+	equalizeHist(charImage, charImage);
 	Canny(binaryCanditate, canyCharImage, 255, 3, 3);
 
 
