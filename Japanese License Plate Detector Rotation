@@ -60,6 +60,8 @@ int main(int argc, char *argv[]){
 
 //		morphologyOperate2();
 
+//		dilationImage();
+
 		binaryOtsuImage();
 
 	 	sobelOperate();
@@ -67,9 +69,6 @@ int main(int argc, char *argv[]){
 //		laplacian();
 
 		mergeImage();
-
-
-//		dilationImage();
 
 		findingContours();
 
@@ -89,7 +88,7 @@ void connectIpCamera(){
 
 	string uname = "root";
 	string password = "****";
-	string ip_address = "http://" + uname + ":" + password + "@169.254.25.***/mjpg/video.mjpg";
+	string ip_address = "http://" + uname + ":" + password + "@169.254.***.1/mjpg/video.mjpg";
 
 	if (capture.open(ip_address) == false) {
 		cout << "Cannot connect IP camera! Check Your Camera Connection." << endl;
@@ -180,8 +179,6 @@ void mergeImage(){
 }
 
 
-
-
 void findingContours(){
 
 		Mat canny_src = binaryMerged;
@@ -189,41 +186,68 @@ void findingContours(){
 
 		Canny(canny_src, canny_output, 255, 3, 3);
 
-		imshow("canny_image", canny_output);
+		Mat minAreaImage = Mat::ones(canny_output.size(), CV_8SC3);
+		canny_output.copyTo(minAreaImage);
+
+		imshow("canny_image", minAreaImage);
 
 		vector<vector<Point> > contours;
-		vector<Vec4i> hierarchy;
 
 		// Find contours
 
-		findContours(canny_output, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
-		vector<RotatedRect> minRect(contours.size());
+		findContours(minAreaImage, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
+
+		vector<RotatedRect> minRect(contours.size());
 
 		Mat rectanglesImage = original_image.clone();
 
 		const Scalar color = Scalar(255, 255, 0);
 
+
 		for (size_t i = 0; i < contours.size(); i++){
+
 
 			minRect[i] = minAreaRect(Mat(contours[i]));
 
-			float rotatedAspectRatio = (float)minRect[i].size.width / minRect[i].size.height;
+			float rotatedAspectRatio = (float)minRect[i].size.width / (float)minRect[i].size.height;
 			float angles = minRect[i].angle;
+			float r = (float)minRect[i].size.width / (float)minRect[i].size.height;
 
-			if ( angles > -15 && minRect[i].size.width > 50 && minRect[i].size.height > 25 && rotatedAspectRatio > 1.85  && rotatedAspectRatio < 2.15){
+
+
+			if (minRect[i].size.width > 25 && minRect[i].size.height > 50.0 && rotatedAspectRatio > 0.4  && rotatedAspectRatio < 0.6 && minRect[i].angle < -80.0){
+
+				cout << rotatedAspectRatio << "--" << angles << endl;
 
 				Point2f rect_points[4]; minRect[i].points(rect_points);
+
+				if (angles < 45.0){
+					angles += 90.0;
+				}
 				for (int j = 0; j < 4; j++){
 
-					float r = (float)minRect[i].size.width / (float)minRect[i].size.height;
+					line(rectanglesImage, rect_points[j], rect_points[(j + 1) % 4], color, 2, 8);
+				}
 
-					float angle = minRect[i].angle;
+			}
 
-					if (r < 1)
-						angle = 90 + angle;
 
-					Mat rotmat = getRotationMatrix2D(minRect[i].center, angle, 1);
+			else if (minRect[i].size.width > 50.0 && minRect[i].size.height > 25.0 && rotatedAspectRatio > 1.85  && rotatedAspectRatio < 2.15 && minRect[i].angle > -10 ){
+
+
+
+				Point2f rect_points[4]; minRect[i].points(rect_points);
+
+
+				for (int j = 0; j < 4; j++){
+
+					line(rectanglesImage, rect_points[j], rect_points[(j + 1) % 4], color, 2, 8);
+				}
+
+				//	cout << rotatedAspectRatio << "--" << angles << endl;
+
+					Mat rotmat = getRotationMatrix2D(minRect[i].center, angles, 1);
 
 					//Create and rotate image
 					Mat img_rotated;
@@ -240,12 +264,7 @@ void findingContours(){
 					Mat resultResized;
 					resultResized.create(100, 200, CV_8UC3);
 					resize(img_crop, resultResized, resultResized.size(), 0, 0, INTER_CUBIC);
-
-
-					line(rectanglesImage, rect_points[j], rect_points[(j + 1) % 4], color, 2, 8);
-//					cout << angles << endl;
-
-
+					
 					GaussianBlur(resultResized, plateCanditate, Size(1, 1), 0);
 					threshold(plateCanditate, binaryCanditate, 0, 255, CV_THRESH_OTSU + CV_THRESH_BINARY);
 					
@@ -269,15 +288,14 @@ void findingContours(){
 								blackX += 1;
 
 							}
-
 						}
 
 						line(histogramX, Point(xx, 0), Point(xx, blackX), Scalar(255, 0, 0), 1);
 						sumX += blackX;
 					}
 
-					averageX = sumX / plateCanditate.cols;
-					blackPixelRtioX = (averageX / plateCanditate.cols) * 100;
+					averageX = (float)sumX / plateCanditate.cols;
+					blackPixelRtioX = (float)(averageX / plateCanditate.cols) * 100;
 
 					//	    cout << averageX << "(" << blackPixelRtioX << " % )" << endl;
 
@@ -308,32 +326,29 @@ void findingContours(){
 							sumY += blackY;
 						}
 
-						averageY = sumY / plateCanditate.cols;
-						blackPixelRtioY = (averageY / plateCanditate.cols) * 100;
-//						cout << averageY << "(" << blackPixelRtioY << " % )" << endl;
+						 averageY = (float) sumY / plateCanditate.cols;
+						 blackPixelRtioY = (float) (averageY / plateCanditate.cols) * 100.0;
+
+						//cout << averageY << "(" << blackPixelRtioY << " % )" << endl;
 
 						if (blackPixelRtioY > 10.0 && blackPixelRtioY < 12.5){
 
-							//						rectangle(rectanglesImage, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
+						//	imshow("histogramX.jpg", histogramX);
+						//	imshow("histogramY", histogramY);
+	
+							imshow("plateCanditate", plateCanditate);
+							imshow("binaryCanditate", binaryCanditate);
+							imwrite("plateCanditate.jpg", plateCanditate);
+							imwrite("plateCanditateBinary.jpg", binaryCanditate);
 
-													imshow("histogramX.jpg", histogramX);
-													imshow("histogramY", histogramY);
-													imshow("plateCanditate", plateCanditate);
-							 						imwrite("plateCanditate.jpg", plateCanditate);
-													imwrite("plateCanditateBinary.jpg", binaryCanditate);
-							//						imshow("binaryCanditate", binaryCanditate);
-							
-													charBoundRect();
-						
+							charBoundRect();
+
 						}
-
-					}
 				}
 
 			}
 		}
 
-		//	imshow("Contours", drawing);
 		imshow("plate_detection_result", rectanglesImage);
 }
 
@@ -348,6 +363,7 @@ void charBoundRect(){
 
 	equalizeHist(charImage, charImage);
 	Canny(binaryCanditate, canyCharImage, 255, 3, 3);
+
 
 
 
@@ -370,12 +386,12 @@ void charBoundRect(){
 		float charXPointRatio =(float) boundRect[i].x / (float)canyCharImage.cols;
 		float charAngles = (float) boundRect[i].width / (float)boundRect[i].height;
 
-		float leftSide4Digit = (float)boundRect[i].x - (float)(boundRect[i].x * 0.05) - ((float)(canyCharImage.cols * 0.591));
-		float topLine = (float)boundRect[i].y - (float)(boundRect[i].y * 0.05);
+		float leftSide4Digit = boundRect[i].x - (float)(boundRect[i].x * 0.05) - ((float)(canyCharImage.cols * 0.591));
+		float topLine = boundRect[i].y - (float)(boundRect[i].y * 0.05);
 		float leftSideKatakana = ( boundRect[i].x - (float)canyCharImage.cols * 0.757) * 0.01;
-		float katakanaHeight = (float)(boundRect[i].height/2) * 0.10;
+		float katakanaHeight = (float)(boundRect[i].height/2.0) * 0.10;
 
-		if (charAngles > 0.4 && charAngles < 0.6 && boundRect[i].width > 10 && boundRect[i].height > 20){
+		if (charAngles > 0.4 && charAngles < 0.6 && boundRect[i].width > 10.0 && boundRect[i].height > 20.0){
 
 			if (charXPointRatio > 0.718  && charXPointRatio < 0.918){
 
