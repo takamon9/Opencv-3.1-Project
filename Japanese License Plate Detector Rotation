@@ -175,7 +175,7 @@ void mergeImage(){
 	Mat firstMerge = binaryOtsu.clone();
 	Mat resultMerge = (firstMerge | sobelImage);
 	threshold(resultMerge, binaryMerged, 127, 255, CV_THRESH_BINARY);
-	imshow("merged_image",  binaryMerged);
+//	imshow("merged_image",  binaryMerged);
 }
 
 
@@ -189,7 +189,7 @@ void findingContours(){
 		Mat minAreaImage = Mat::ones(canny_output.size(), CV_8SC3);
 		canny_output.copyTo(minAreaImage);
 
-		imshow("canny_image", minAreaImage);
+//		imshow("canny_image", minAreaImage);
 
 		vector<vector<Point> > contours;
 
@@ -216,35 +216,131 @@ void findingContours(){
 
 
 
-			if (minRect[i].size.width > 25 && minRect[i].size.height > 50.0 && rotatedAspectRatio > 0.4  && rotatedAspectRatio < 0.6 && minRect[i].angle < -80.0){
+			if (minRect[i].size.width > 25 && minRect[i].size.height > 50.0 && rotatedAspectRatio > 0.4  && rotatedAspectRatio < 0.6 && minRect[i].angle < -75.0){
 
-				cout << rotatedAspectRatio << "--" << angles << endl;
+				cout << "Angle : " << angles << endl;
 
 				Point2f rect_points[4]; minRect[i].points(rect_points);
 
 				if (angles < 45.0){
 					angles += 90.0;
 				}
-				for (int j = 0; j < 4; j++){
 
-					line(rectanglesImage, rect_points[j], rect_points[(j + 1) % 4], color, 2, 8);
+				//	cout << rotatedAspectRatio << "--" << angles << endl;
+
+				Mat rotmat = getRotationMatrix2D(minRect[i].center, angles, 1);
+
+				//Create and rotate image
+				Mat img_rotated;
+				warpAffine(grayscaleimage, img_rotated, rotmat, grayscaleimage.size(), CV_INTER_CUBIC);
+
+				//Crop image
+				Size rect_size = minRect[i].size;
+				if (r < 1)
+					swap(rect_size.width, rect_size.height);
+
+				Mat img_crop;
+				getRectSubPix(img_rotated, rect_size, minRect[i].center, img_crop);
+
+				Mat resultResized;
+				resultResized.create(100, 200, CV_8UC3);
+				resize(img_crop, resultResized, resultResized.size(), 0, 0, INTER_CUBIC);
+
+				GaussianBlur(resultResized, plateCanditate, Size(1, 1), 0);
+				threshold(plateCanditate, binaryCanditate, 0, 255, CV_THRESH_OTSU + CV_THRESH_BINARY);
+
+				int xx, xy;
+
+				float averageX, blackPixelRtioX;
+
+				Mat histogramX = Mat(Size(plateCanditate.cols, plateCanditate.rows), CV_8UC3, Scalar(255, 255, 255));
+
+				float sumX = 0;
+
+				for (xx = 0; xx < binaryCanditate.cols; xx++){
+
+					int blackX = 0;
+
+					for (xy = 0; xy < binaryCanditate.rows; xy++){
+
+						int intensity = binaryCanditate.at<uchar>(Point(xx, xy));
+						if (intensity == 0){
+
+							blackX += 1;
+
+						}
+					}
+
+					line(histogramX, Point(xx, 0), Point(xx, blackX), Scalar(255, 0, 0), 1);
+					sumX += blackX;
 				}
+
+				averageX = (float)sumX / plateCanditate.cols;
+				blackPixelRtioX = (float)(averageX / plateCanditate.cols) * 100;
+
+			//	    cout << averageX << "(" << blackPixelRtioX << " % )" << endl;
+
+				if (blackPixelRtioX > 8.5 && blackPixelRtioX < 13.5){
+
+					int yx, yy;
+
+					float averageY, blackPixelRtioY;
+					Mat histogramY = Mat(Size(plateCanditate.cols, plateCanditate.rows), CV_8UC3, Scalar(255, 255, 255));
+
+					float sumY = 0;
+
+					for (yy = 0; yy < binaryCanditate.rows; yy++){
+
+						int blackY = 0;
+
+						for (yx = 0; yx < binaryCanditate.cols; yx++){
+
+							int intensity = binaryCanditate.at<uchar>(Point(yx, yy));
+							if (intensity == 0){
+
+								blackY += 1;
+
+							}
+						}
+
+						line(histogramY, Point(0, yy), Point(blackY, yy), Scalar(255, 0, 0), 1);
+						sumY += blackY;
+					}
+
+					averageY = (float)sumY / plateCanditate.cols;
+					blackPixelRtioY = (float)(averageY / plateCanditate.cols) * 100.0;
+
+					//cout << averageY << "(" << blackPixelRtioY << " % )" << endl;
+
+					if (blackPixelRtioY > 10.0 && blackPixelRtioY < 12.5){
+
+						for (int j = 0; j < 4; j++){
+
+							line(rectanglesImage, rect_points[j], rect_points[(j + 1) % 4], color, 2, 8);
+						}
+
+						//	imshow("histogramX.jpg", histogramX);
+						//	imshow("histogramY", histogramY);
+							imshow("plateCanditate", plateCanditate);
+						//	imshow("binaryCanditate", binaryCanditate);
+							imwrite("plateCanditate.jpg", plateCanditate);
+							imwrite("plateCanditateBinary.jpg", binaryCanditate);
+
+						charBoundRect();
+
+					}
+				}
+
 
 			}
 
 
-			else if (minRect[i].size.width > 50.0 && minRect[i].size.height > 25.0 && rotatedAspectRatio > 1.85  && rotatedAspectRatio < 2.15 && minRect[i].angle > -10 ){
+			else if (minRect[i].size.width > 50.0 && minRect[i].size.height > 25.0 && rotatedAspectRatio > 1.85  && rotatedAspectRatio < 2.15 && minRect[i].angle > -15 ){
 
-
+				cout << "Angle : " << angles << endl;
 
 				Point2f rect_points[4]; minRect[i].points(rect_points);
-
-
-				for (int j = 0; j < 4; j++){
-
-					line(rectanglesImage, rect_points[j], rect_points[(j + 1) % 4], color, 2, 8);
-				}
-
+				
 				//	cout << rotatedAspectRatio << "--" << angles << endl;
 
 					Mat rotmat = getRotationMatrix2D(minRect[i].center, angles, 1);
@@ -297,8 +393,6 @@ void findingContours(){
 					averageX = (float)sumX / plateCanditate.cols;
 					blackPixelRtioX = (float)(averageX / plateCanditate.cols) * 100;
 
-					//	    cout << averageX << "(" << blackPixelRtioX << " % )" << endl;
-
 					if (blackPixelRtioX > 8.5 && blackPixelRtioX < 13.5){
 
 						int yx, yy;
@@ -333,11 +427,15 @@ void findingContours(){
 
 						if (blackPixelRtioY > 10.0 && blackPixelRtioY < 12.5){
 
+							for (int j = 0; j < 4; j++){
+
+								line(rectanglesImage, rect_points[j], rect_points[(j + 1) % 4], color, 2, 8);
+							}
+
 						//	imshow("histogramX.jpg", histogramX);
 						//	imshow("histogramY", histogramY);
-	
-							imshow("plateCanditate", plateCanditate);
-							imshow("binaryCanditate", binaryCanditate);
+								imshow("plateCanditate", plateCanditate);
+						//	imshow("binaryCanditate", binaryCanditate);
 							imwrite("plateCanditate.jpg", plateCanditate);
 							imwrite("plateCanditateBinary.jpg", binaryCanditate);
 
@@ -356,7 +454,6 @@ void findingContours(){
 void charBoundRect(){
 
 	vector<vector<Point> > contours;
-	vector<Vec4i> hierarchy;
 	Mat charImage(binaryCanditate);
 	Mat char_output = charImage.clone();
 	Mat canyCharImage;
@@ -364,20 +461,17 @@ void charBoundRect(){
 	equalizeHist(charImage, charImage);
 	Canny(binaryCanditate, canyCharImage, 255, 3, 3);
 
-
-
-
 	// Find contours
 	 
-	findContours(canyCharImage, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+	findContours(canyCharImage, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
 	vector<vector<Point> > contours_poly(contours.size());
 	vector<Rect> boundRect(contours.size());
 	Scalar color = Scalar(255, 255, 0);
 
-	float fourDigitHeight = (float)canyCharImage.rows * 0.545;
-	float fourDigitWidth = (float)char_output.cols * 0.712;
-	float katakanaWidth = (float)canyCharImage.cols * 0.181;
+	int fourDigitHeight = (float)canyCharImage.rows * 0.545;
+	int fourDigitWidth = (float)char_output.cols * 0.712;
+	int katakanaWidth = (float)canyCharImage.cols * 0.181;
 
 	for (size_t i = 0; i < contours.size(); i++){
 		approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
@@ -386,10 +480,10 @@ void charBoundRect(){
 		float charXPointRatio =(float) boundRect[i].x / (float)canyCharImage.cols;
 		float charAngles = (float) boundRect[i].width / (float)boundRect[i].height;
 
-		float leftSide4Digit = boundRect[i].x - (float)(boundRect[i].x * 0.05) - ((float)(canyCharImage.cols * 0.591));
-		float topLine = boundRect[i].y - (float)(boundRect[i].y * 0.05);
-		float leftSideKatakana = ( boundRect[i].x - (float)canyCharImage.cols * 0.757) * 0.01;
-		float katakanaHeight = (float)(boundRect[i].height/2.0) * 0.10;
+		int leftSide4Digit = boundRect[i].x - (float)(boundRect[i].x * 0.05) - ((float)(canyCharImage.cols * 0.591));
+		int topLine = boundRect[i].y - (float)(boundRect[i].y * 0.05);
+		int leftSideKatakana = ( boundRect[i].x - (float)canyCharImage.cols * 0.757) * 0.01;
+		int katakanaHeight = (float)(boundRect[i].height/2.0) * 0.10;
 
 		if (charAngles > 0.4 && charAngles < 0.6 && boundRect[i].width > 10.0 && boundRect[i].height > 20.0){
 
@@ -408,7 +502,7 @@ void charBoundRect(){
 				Mat rikuUnNum = char_output(riku);
 				imwrite("rikuUnNum.jpg", rikuUnNum); 
 	
-				rectangle(char_output, Point(leftSide4Digit, topLine), Point(boundRect[i].x + boundRect[i].width, topLine + boundRect[i].height + (boundRect[i].height* 0.05)), Scalar(0, 0,255), 2, 8, 0);
+				rectangle(char_output, Point(leftSide4Digit, topLine), Point(boundRect[i].x + boundRect[i].width, topLine + boundRect[i].height + (boundRect[i].height* 0.05)), Scalar(0, 0, 255), 2, 8, 0);
 				rectangle(char_output, Point(leftSideKatakana, topLine), Point(leftSide4Digit, topLine + boundRect[i].height + (boundRect[i].height* 0.05)), Scalar(0, 0, 255), 2, 8, 0);
 				rectangle(char_output, Point(leftSide4Digit,0), Point(boundRect[i].x, topLine), Scalar(0, 0, 255), 2, 8, 0);
 
