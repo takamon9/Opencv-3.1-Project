@@ -4,11 +4,12 @@
 #include <opencv2\opencv.hpp>
 #include <opencv2\imgproc\imgproc.hpp>
 #include <vector>
-#include <opencv/cvaux.h>
-#include <opencv/cv.h>
-#include <tesseract/include/tesseract/baseapi.h>
-#include <tesseract/leptonica/include/leptonica/allheaders.h>
-
+#include <opencv\cvaux.h>
+#include <opencv\cv.h>
+#include <opencv2\text.hpp>
+#include <fstream>
+#include <string>
+#include <stdlib.h>
 
 using namespace cv;
 using namespace std;
@@ -21,46 +22,44 @@ void morphologyOperate2();
 void dilationImage();
 void sobelOperate();
 void binaryOtsuImage();
-void countRowsCols();
-void countBlackPixelsX();
-void countBlackPixelsY();
 void findingContours();
-void countpixelXY();
-void blackPixelYCount();
 void charBoundRect();
 void mergeImage();
 void laplacian();
-bool verifySizes(RotatedRect mr);
-
+void textReading();
 void grayscaleTo();
+bool verifySize(RotatedRect rect);
 
 VideoCapture capture;
 Mat original_image;
 Mat grayscaleimage;
 Mat binary1, binary2, equalize;
 Mat temp_img, sobelImage;
-Mat binaryOtsu, plateCanditate;
+Mat binaryOtsu, plateCanditate, resultResized;
 Mat morpho, resultMerge, binaryInverted;
 Mat firstMerge, binaryMerged;
 Mat histogramX, histogramY, binaryHistX, binaryCanditate;
 Mat abs_dst;
-Mat lapla;
+Mat lapla, smooth, toZero;
 Mat laplacian_image;
-Mat grayscaleToSet;
-Mat gausian,sobel_out,binarySobel;
+Mat digitRoi, katakana, rikuUnNum;
 
+Ptr<text::OCRTesseract> ocr = text::OCRTesseract::create("",
+	"eng",
+	NULL,
+	3,
+	7
+);
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
 
 	connectIpCamera();
-
-	for (;;){
+	for (;;) {
 
 		readImage();
-
 		convertGrayscale();
 
-	//	grayscaleTo();
+		//		grayscaleTo();
 
 		//		countRowsCols();
 
@@ -72,16 +71,15 @@ int main(int argc, char *argv[]){
 
 		binaryOtsuImage();
 
-		//	sobelOperate();
+		//	 	sobelOperate();
 
 		//		laplacian();
 
-		//	mergeImage();
+		//		mergeImage();
 
 		findingContours();
 
 		if (waitKey(1) >= 0) break;
-
 	}
 
 	waitKey(0);
@@ -90,7 +88,6 @@ int main(int argc, char *argv[]){
 
 	return 0;
 }
-
 
 
 void connectIpCamera(){
@@ -105,18 +102,18 @@ void connectIpCamera(){
 	}
 }
 
-int readImage(){
-	if (capture.read(original_image) == false){
+int readImage() {
+	if (capture.read(original_image) == false) {
 		return -1;
 	}
 }
 
-void countRowsCols(){
+void countRowsCols() {
 	cout << grayscaleimage.rows << endl;
 	cout << grayscaleimage.cols << endl;
 }
 
-void morphologyOperate1(){
+void morphologyOperate1() {
 	Mat morphoImage = imread("morphology_img.jpg");
 	threshold(morphoImage, binary1, 170, 255, CV_THRESH_BINARY);
 	bitwise_not(binary1, binaryInverted);
@@ -124,7 +121,7 @@ void morphologyOperate1(){
 	imshow("binary1", binary1);
 }
 
-void morphologyOperate2(){
+void morphologyOperate2() {
 	Mat morphoImage = imread("morphology_img.jpg");
 	threshold(morphoImage, binary2, 200, 255, CV_THRESH_BINARY);
 	bitwise_not(binary2, binaryInverted);
@@ -132,7 +129,7 @@ void morphologyOperate2(){
 	imshow("binary2", binary2);
 
 }
-void dilationImage(){
+void dilationImage() {
 
 	int morph_size = 5;
 	Mat element = getStructuringElement(MORPH_RECT, Size(2 * morph_size + 1, 2 * morph_size + 1), Point(morph_size, morph_size));
@@ -141,7 +138,7 @@ void dilationImage(){
 	//	imwrite("morphology_img.jpg", morpho);
 }
 
-void convertGrayscale(){
+void convertGrayscale() {
 
 	cvtColor(original_image, grayscaleimage, CV_BGR2GRAY);
 	equalizeHist(grayscaleimage, equalize);
@@ -149,31 +146,29 @@ void convertGrayscale(){
 	//	imshow("equalize", equalize);
 }
 
+void grayscaleTo() {
 
-void grayscaleTo(){
+	Mat grayscaleTo;
 
-
-	cvtColor(original_image, grayscaleimage, CV_BGR2GRAY);
-	equalizeHist(grayscaleimage, grayscaleToSet);
-
+	cvtColor(grayscaleimage, grayscaleTo, CV_RGB2GRAY);
 
 	int x;
 	int y;
 	int sumOfcolorNum;
 
-	for (y = 0; y < grayscaleToSet.rows; y++){
+	for (y = 0; y < grayscaleimage.rows; y++) {
 
-		for (x = 0; x < grayscaleToSet.cols; x++){
+		for (x = 0; x < grayscaleimage.cols; x++) {
 
-			if (grayscaleToSet.at<unsigned char>(y, x) > 50 && grayscaleToSet.at<unsigned char>(y, x) < 80) {
+			if (grayscaleimage.at<unsigned char>(y, x) > 50 && grayscaleimage.at<unsigned char>(y, x) < 80) {
 
-				grayscaleToSet.at<unsigned char>(y, x) = 255;
+				grayscaleimage.at<unsigned char>(y, x) = 255;
 
 			}
 
-			if (grayscaleToSet.at<unsigned char>(y, x) > 120 && grayscaleToSet.at<unsigned char>(y, x) < 170) {
+			if (grayscaleimage.at<unsigned char>(y, x) > 115 && grayscaleimage.at<unsigned char>(y, x) < 160) {
 
-				grayscaleToSet.at<unsigned char>(y, x) = 255;
+				grayscaleimage.at<unsigned char>(y, x) = 255;
 
 			}
 
@@ -181,42 +176,34 @@ void grayscaleTo(){
 		}
 	}
 
-	imshow("grayToSet", grayscaleToSet);
+	imshow("gray", grayscaleTo);
 
 }
 
-void binaryOtsuImage(){
+void binaryOtsuImage() {
 
-	Mat gausian;
 
-	GaussianBlur(grayscaleimage, gausian,Size(7,7),(-1,-1),BORDER_DEFAULT);
-	imshow("gausian", gausian);
-	threshold(gausian, binaryOtsu, 120, 255, CV_THRESH_BINARY);
+	threshold(equalize, binaryOtsu, 0, 255, CV_THRESH_BINARY | CV_THRESH_TOZERO);
+	//	threshold(equalize, binaryOtsu, 0, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
 	imshow("otsu", binaryOtsu);
 }
 
-void sobelOperate(){
+void sobelOperate() {
+
 	Mat sobelImageX, sobelImageY;
 
-	Sobel(equalize, temp_img, CV_16S, 1, 0, 1, 3, 5, BORDER_DEFAULT);
+	Sobel(equalize, temp_img, CV_16S, 1, 0, 1, 3, 5, BORDER_CONSTANT);
 	convertScaleAbs(temp_img, sobelImageX, 1, 1);
 
-	Sobel(equalize, temp_img, CV_16S, 0, 1, 1, 3, 5, BORDER_DEFAULT);
+	Sobel(equalize, temp_img, CV_16S, 0, 1, 1, 3, 5, BORDER_CONSTANT);
 	convertScaleAbs(temp_img, sobelImageY, 1, 1);
 
 	addWeighted(sobelImageX, 0.4, sobelImageY, 0.4, 0, sobelImage);
 
-
-
-	GaussianBlur(sobelImage, sobel_out, Size(7, 7), (-1, -1), BORDER_DEFAULT);
-
-	imshow("sobel", sobelImage);
-
-	threshold(sobelImage, binarySobel, 130, 255, CV_THRESH_BINARY);
-	imshow("binarysobel", binarySobel);
+	//	imshow("sobel", sobelImage);
 }
 
-void laplacian(){
+void laplacian() {
 
 	Laplacian(sobelImage, lapla, CV_16S, 3, 1, 0, BORDER_DEFAULT);
 	convertScaleAbs(lapla, abs_dst);
@@ -225,16 +212,34 @@ void laplacian(){
 }
 
 
-void mergeImage(){
+void mergeImage() {
 
 	Mat firstMerge = binaryOtsu.clone();
-	Mat resultMerge = (firstMerge | sobel_out);
-	threshold(resultMerge, binaryMerged, 0,255, CV_THRESH_BINARY);
+	Mat resultMerge = (firstMerge | sobelImage);
+	threshold(resultMerge, binaryMerged, 0, 255, CV_THRESH_BINARY | CV_THRESH_TRIANGLE);
 	imshow("merged_image", binaryMerged);
 }
 
 
-void findingContours(){
+bool verifySize(RotatedRect rect) {
+
+	float rotatedAspectRatio = (float)rect.size.width / (float)rect.size.height;
+	float angles = rect.angle;
+	float r = (float)rect.size.width / (float)rect.size.height;
+
+	if (rect.size.width > 25 && rect.size.height > 25.0) {
+
+		return true;
+	}
+
+	else {
+		return false;
+	}
+
+
+}
+
+void findingContours() {
 
 	Mat canny_src = binaryOtsu;
 	Mat canny_output;
@@ -245,23 +250,33 @@ void findingContours(){
 	canny_output.copyTo(minAreaImage);
 
 	imshow("canny_image", minAreaImage);
-
+	
 	vector<vector<Point> > contours;
 
 	// Find contours
 
-	findContours(minAreaImage, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
-
-
+	findContours(minAreaImage, contours, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
+	vector<vector<Point> >::iterator itl = contours.begin();
 	vector<RotatedRect> minRect(contours.size());
+
+	while (itl != contours.end()) {
+		RotatedRect rect = minAreaRect(Mat(*itl));
+		if (!verifySize(rect)) {
+			itl = contours.erase(itl);
+		}
+		else {
+			++itl;
+			minRect.push_back(rect);
+		}
+
+	}
 
 	Mat rectanglesImage = original_image.clone();
 
 	const Scalar color = Scalar(255, 255, 0);
 
 
-	for (size_t i = 0; i < contours.size(); i++){
-
+	for (size_t i = 0; i < contours.size(); i++) {
 
 		minRect[i] = minAreaRect(Mat(contours[i]));
 
@@ -269,22 +284,14 @@ void findingContours(){
 		float angles = minRect[i].angle;
 		float r = (float)minRect[i].size.width / (float)minRect[i].size.height;
 
+		if (minRect[i].size.width > 25 && minRect[i].size.height > 50.0 && rotatedAspectRatio > 0.4  && rotatedAspectRatio < 0.6 && minRect[i].angle < -75.0) {
 
-
-		if (minRect[i].size.width > 25 && minRect[i].size.height > 50.0 && rotatedAspectRatio > 0.4  && rotatedAspectRatio < 0.6 && minRect[i].angle < -75.0){
-
-			cout << "Angle : " << angles << endl;
+			//	cout << "Angle : " << angles << endl;
 
 			Point2f rect_points[4]; minRect[i].points(rect_points);
 
-			if (angles < 45.0){
+			if (angles < 45.0) {
 				angles += 90.0;
-			}
-
-
-			for (int j = 0; j < 4; j++){
-
-				line(rectanglesImage, rect_points[j], rect_points[(j + 1) % 4], color, 2, 8);
 			}
 
 			//	cout << rotatedAspectRatio << "--" << angles << endl;
@@ -307,24 +314,24 @@ void findingContours(){
 			resize(img_crop, plateCanditate, plateCanditate.size(), 0, 0, INTER_CUBIC);
 
 			//	GaussianBlur(resultResized, plateCanditate, Size(1, 1), 0);
-			threshold(plateCanditate, binaryCanditate, 0, 255, CV_THRESH_OTSU + CV_THRESH_BINARY);
+			threshold(plateCanditate, binaryCanditate, 0, 255, CV_THRESH_OTSU | CV_THRESH_TOZERO);
 
 			int xx, xy;
 
 			float averageX, blackPixelRtioX;
 
-			Mat histogramX = Mat(Size(plateCanditate.cols, plateCanditate.rows), CV_8UC3, Scalar(255, 255, 255));
+			//	Mat histogramX = Mat(Size(plateCanditate.cols, plateCanditate.rows), CV_8UC3, Scalar(255, 255, 255));
 
 			float sumX = 0;
 
-			for (xx = 0; xx < binaryCanditate.cols; xx++){
+			for (xx = 0; xx < binaryCanditate.cols; xx++) {
 
 				int blackX = 0;
 
-				for (xy = 0; xy < binaryCanditate.rows; xy++){
+				for (xy = 0; xy < binaryCanditate.rows; xy++) {
 
 					int intensity = binaryCanditate.at<uchar>(Point(xx, xy));
-					if (intensity == 0){
+					if (intensity == 0) {
 
 						blackX += 1;
 
@@ -340,23 +347,23 @@ void findingContours(){
 
 			//	    cout << averageX << "(" << blackPixelRtioX << " % )" << endl;
 
-			if (blackPixelRtioX > 7.5 && blackPixelRtioX < 13.5){
+			if (blackPixelRtioX > 8.5 && blackPixelRtioX < 13.5) {
 
 				int yx, yy;
 
 				float averageY, blackPixelRtioY;
-				Mat histogramY = Mat(Size(plateCanditate.cols, plateCanditate.rows), CV_8UC3, Scalar(255, 255, 255));
+				//	Mat histogramY = Mat(Size(plateCanditate.cols, plateCanditate.rows), CV_8UC3, Scalar(255, 255, 255));
 
 				float sumY = 0;
 
-				for (yy = 0; yy < binaryCanditate.rows; yy++){
+				for (yy = 0; yy < binaryCanditate.rows; yy++) {
 
 					int blackY = 0;
 
-					for (yx = 0; yx < binaryCanditate.cols; yx++){
+					for (yx = 0; yx < binaryCanditate.cols; yx++) {
 
 						int intensity = binaryCanditate.at<uchar>(Point(yx, yy));
-						if (intensity == 0){
+						if (intensity == 0) {
 
 							blackY += 1;
 
@@ -372,9 +379,12 @@ void findingContours(){
 
 				//cout << averageY << "(" << blackPixelRtioY << " % )" << endl;
 
-				if (blackPixelRtioY > 9.0 && blackPixelRtioY < 12.5){
+				if (blackPixelRtioY > 10.0 && blackPixelRtioY < 12.5) {
 
+					for (int j = 0; j < 4; j++) {
 
+						line(rectanglesImage, rect_points[j], rect_points[(j + 1) % 4], color, 2, 8);
+					}
 
 					//	imshow("histogramX.jpg", histogramX);
 					//	imshow("histogramY", histogramY);
@@ -387,22 +397,14 @@ void findingContours(){
 
 				}
 			}
-
-
 		}
 
 
-		else if (minRect[i].size.width > 50.0 && minRect[i].size.height > 25.0 && rotatedAspectRatio > 1.85  && rotatedAspectRatio < 2.15 && minRect[i].angle > -15){
+		else if (minRect[i].size.width > 50.0 && minRect[i].size.height > 25.0 && rotatedAspectRatio > 1.85  && rotatedAspectRatio < 2.15 && minRect[i].angle > -15) {
 
-			cout << "Angle : " << angles << endl;
+			//	cout << "Angle : " << angles << endl;
 
 			Point2f rect_points[4]; minRect[i].points(rect_points);
-
-
-			for (int j = 0; j < 4; j++){
-
-				line(rectanglesImage, rect_points[j], rect_points[(j + 1) % 4], color, 2, 8);
-			}
 
 			//	cout << rotatedAspectRatio << "--" << angles << endl;
 
@@ -424,24 +426,24 @@ void findingContours(){
 			resize(img_crop, plateCanditate, plateCanditate.size(), 0, 0, INTER_CUBIC);
 
 			//GaussianBlur(resultResized, plateCanditate, Size(1, 1), 0);
-			threshold(plateCanditate, binaryCanditate, 0, 255, CV_THRESH_OTSU + CV_THRESH_BINARY);
+			threshold(plateCanditate, binaryCanditate, 0, 255, CV_THRESH_OTSU | CV_THRESH_TOZERO);
 
 			int xx, xy;
 
 			float averageX, blackPixelRtioX;
 
-			Mat histogramX = Mat(Size(plateCanditate.cols, plateCanditate.rows), CV_8UC3, Scalar(255, 255, 255));
+			//	Mat histogramX = Mat(Size(plateCanditate.cols, plateCanditate.rows), CV_8UC3, Scalar(255, 255, 255));
 
 			float sumX = 0;
 
-			for (xx = 0; xx < binaryCanditate.cols; xx++){
+			for (xx = 0; xx < binaryCanditate.cols; xx++) {
 
 				int blackX = 0;
 
-				for (xy = 0; xy < binaryCanditate.rows; xy++){
+				for (xy = 0; xy < binaryCanditate.rows; xy++) {
 
 					int intensity = binaryCanditate.at<uchar>(Point(xx, xy));
-					if (intensity == 0){
+					if (intensity == 0) {
 
 						blackX += 1;
 
@@ -455,23 +457,23 @@ void findingContours(){
 			averageX = (float)sumX / plateCanditate.cols;
 			blackPixelRtioX = (float)(averageX / plateCanditate.cols) * 100;
 
-			if (blackPixelRtioX > 7.5 && blackPixelRtioX < 12.5){
+			if (blackPixelRtioX > 8.5 && blackPixelRtioX < 13.5) {
 
 				int yx, yy;
 
 				float averageY, blackPixelRtioY;
-				Mat histogramY = Mat(Size(plateCanditate.cols, plateCanditate.rows), CV_8UC3, Scalar(255, 255, 255));
+				//	Mat histogramY = Mat(Size(plateCanditate.cols, plateCanditate.rows), CV_8UC3, Scalar(255, 255, 255));
 
 				float sumY = 0;
 
-				for (yy = 0; yy < binaryCanditate.rows; yy++){
+				for (yy = 0; yy < binaryCanditate.rows; yy++) {
 
 					int blackY = 0;
 
-					for (yx = 0; yx < binaryCanditate.cols; yx++){
+					for (yx = 0; yx < binaryCanditate.cols; yx++) {
 
 						int intensity = binaryCanditate.at<uchar>(Point(yx, yy));
-						if (intensity == 0){
+						if (intensity == 0) {
 
 							blackY += 1;
 
@@ -487,7 +489,12 @@ void findingContours(){
 
 				//cout << averageY << "(" << blackPixelRtioY << " % )" << endl;
 
-				if (blackPixelRtioY > 9.0 && blackPixelRtioY < 12.5){
+				if (blackPixelRtioY > 10.0 && blackPixelRtioY < 12.5) {
+
+					for (int j = 0; j < 4; j++) {
+
+						line(rectanglesImage, rect_points[j], rect_points[(j + 1) % 4], color, 2, 8);
+					}
 
 					//	imshow("histogramX.jpg", histogramX);
 					//	imshow("histogramY", histogramY);
@@ -503,12 +510,13 @@ void findingContours(){
 
 		}
 	}
-	namedWindow("plate_detection_result", WINDOW_AUTOSIZE | CV_WINDOW_KEEPRATIO);
-	imshow("plate_detection_result", rectanglesImage);
+
+	namedWindow("Plate Detected Image", WINDOW_NORMAL | WINDOW_KEEPRATIO);
+	imshow("Plate Detected Image", rectanglesImage);
 }
 
 
-void charBoundRect(){
+void charBoundRect() {
 
 	vector<vector<Point> > contours;
 	Mat charImage(binaryCanditate);
@@ -517,6 +525,7 @@ void charBoundRect(){
 
 	//equalizeHist(charImage, charImage);
 	Canny(binaryCanditate, canyCharImage, 255, 3, 3);
+	imshow("test", canyCharImage);
 
 	// Find contours
 
@@ -530,63 +539,76 @@ void charBoundRect(){
 	//int fourDigitWidth = (float)char_output.cols * 0.712;
 	//int katakanaWidth = (float)canyCharImage.cols * 0.181;
 
-	for (size_t i = 0; i < contours.size(); i++){
+	for (size_t i = 0; i < contours.size(); i++) {
 		approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
 		boundRect[i] = boundingRect(Mat(contours_poly[i]));
 
-		float charXPointRatio = (float)boundRect[i].x / canyCharImage.cols;
-		float charAngles = (float)boundRect[i].width / boundRect[i].height;
+		float charXPointRatio = (float)boundRect[i].x / (float)canyCharImage.cols;
+		float charRatio = (float)boundRect[i].width / (float)boundRect[i].height;
 
 
-		if (charAngles > 0.3 && charAngles < 0.6 && boundRect[i].width > 10.0 && boundRect[i].height > 15.0){
+		if (charRatio > 0.2 && charRatio < 0.6 && boundRect[i].width > 5.0 && boundRect[i].height > 10.0) {
 
-			if (charXPointRatio > 0.658  && charXPointRatio < 0.918){
+			if (charXPointRatio > 0.658  && charXPointRatio < 0.918) {
 
 				Rect Digit(42, 36, 151, 63);
-				Mat digitRoi = plateCanditate(Digit);
+				digitRoi = char_output(Digit);
 				imwrite("4_digit_number.jpg", digitRoi);
 
 				Rect kana(6, 36, 36, 63);
-				Mat katakana = plateCanditate(kana);
+				katakana = char_output(kana);
 				imwrite("katakana.jpg", katakana);
 
 
 				Rect riku(42, 0, 122, 36);
-				Mat rikuUnNum = plateCanditate(riku);
+				rikuUnNum = char_output(riku);
 				imwrite("rikuUnNum.jpg", rikuUnNum);
 
 				rectangle(char_output, Point(42, 36), Point(193, 96), Scalar(0, 0, 255), 2, 8, 0);
 				rectangle(char_output, Point(6, 36), Point(42, 96), Scalar(0, 0, 255), 2, 8, 0);
 				rectangle(char_output, Point(42, 0), Point(160, 36), Scalar(0, 0, 255), 2, 8, 0);
 
-				/*
-				tesseract::TessBaseAPI api;
-				api.Init("", "eng", tesseract::OEM_DEFAULT);
-				api.SetPageSegMode(static_cast<tesseract::PageSegMode>(7));
-				api.SetOutputName("out");
-
-
-				
-				STRING digit_num_out;
-				api.ProcessPages("4_digit_number.jpg", NULL, 0, &digit_num_out);
-
-				STRING katakana_out;
-				api.ProcessPages("katakana.jpg", NULL, 0, &katakana_out);
-
-				STRING rikuUn_out;
-				api.ProcessPages("rikuUnNum.jpg", NULL, 0, &rikuUn_out);
-
-				
-
-				cout << &digit_num_out << &katakana_out << &rikuUn_out << endl;
-				
-				*/
-				namedWindow("Final Result of Number Plate", WINDOW_AUTOSIZE | CV_WINDOW_KEEPRATIO);
+				namedWindow("Final Result of Number Plate", WINDOW_AUTOSIZE);
 				imshow("Final Result of Number Plate", char_output);
+
+				textReading();
 
 			}
 		}
 	}
 
+
+}
+
+
+void textReading() {
+
+	string digitText,katakanaText,rikuUnNumText;
+
+	ocr->run(digitRoi,
+		digitText,
+		NULL,
+		NULL,
+		NULL,
+		0
+	);
+
+	ocr->run(katakana,
+		katakanaText,
+		NULL,
+		NULL,
+		NULL,
+		0
+	);
+
+	ocr->run(rikuUnNum,
+		rikuUnNumText,
+		NULL,
+		NULL,
+		NULL,
+		0
+	);
+
+	cout << "[" << rikuUnNumText << "," << katakanaText << "," << digitText << "]" <<endl;
 
 }
