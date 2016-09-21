@@ -137,6 +137,50 @@ void convertGrayscale(){
 //	imshow("equalize", equalize);
 }
 
+void createSlidebarWindow() {
+
+	namedWindow("hsv", 1);
+
+	lowerHue = 0;
+	lowerSatuation = 0;
+	lowerRed = 0;
+
+	createTrackbar("lower hue", "hsv", &lowerHue, 180);
+	createTrackbar("lower satuation", "hsv", &lowerSatuation, 255);
+	createTrackbar("lower red", "hsv", &lowerRed, 255);
+
+	upperHue = 164;
+	upperSatuation = 164;
+	upperRed = 69;
+
+	createTrackbar("upper hue", "hsv", &upperHue, 180);
+	createTrackbar("upper satuation", "hsv", &upperSatuation, 255);
+	createTrackbar("upper red", "hsv", &upperRed, 255);
+}
+
+void hsvImage(){
+	
+	Mat hsvImg;
+
+	cvtColor(original_image, hsvImg, COLOR_BGR2HSV);
+
+	Mat whiteNumberPlate,whiteMorph;
+	Mat yellowNumberPlate;
+
+	inRange(hsvImg, Scalar(lowerHue, lowerSatuation, lowerRed), Scalar(upperHue, upperSatuation, upperRed), whiteNumberPlate);
+	inRange(hsvImg, Scalar(160, 100, 100), Scalar(179, 255, 255),yellowNumberPlate);
+	
+	double morph_size = 2.0;
+
+	Mat element = getStructuringElement(MORPH_RECT, Size(2 * morph_size + 1, 2 * morph_size + 1), Point(morph_size, morph_size));
+	morphologyEx(whiteNumberPlate, whiteMorph, MORPH_DILATE, element, Point(-1, -1));
+	morphologyEx(whiteMorph, morpho, MORPH_ERODE, element, Point(-1, -1));
+	//morphologyEx(whiteMorph, morpho, MORPH_OPEN, element, Point(-1, -1));
+	imshow("morpho", morpho);
+
+//	imwrite("morphology_img.jpg", morpho);
+}
+
 void grayscaleTo(){
 
 	Mat grayscaleTo;
