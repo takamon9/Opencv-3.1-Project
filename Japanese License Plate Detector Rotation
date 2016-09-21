@@ -24,6 +24,8 @@ void morphologyOperate2();
 void dilationImage();
 void binaryOtsuImage();
 void findingContours();
+void createSlidebarWindow();
+void hsvImage();
 void charBoundRect();
 void textReading();
 void grayscaleTo();
@@ -47,7 +49,8 @@ Mat digitRoi, katakana, rikuUnNum;
 int main(int argc, char *argv[]){
 
 	connectIpCamera();
-
+	createSlidebarWindow();
+	
 	for (;;){
 
 		readImage();
@@ -65,7 +68,9 @@ int main(int argc, char *argv[]){
 //		dilationImage();
 
 		binaryOtsuImage();
-
+		
+		hsvImage();
+		
 //	 	sobelOperate();
 
 //		laplacian();
