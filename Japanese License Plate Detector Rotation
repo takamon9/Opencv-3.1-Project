@@ -45,6 +45,12 @@ Mat lapla, smooth,toZero;
 Mat laplacian_image;
 Mat digitRoi, katakana, rikuUnNum;
 
+int lowerHue;
+int lowerSatuation;
+int lowerValue;
+int upperHue;
+int upperSatuation;
+int upperValue;
 
 int main(int argc, char *argv[]){
 
