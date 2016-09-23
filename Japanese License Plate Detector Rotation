@@ -154,15 +154,15 @@ void createSlidebarWindow() {
 
 	lowerHue = 0;
 	lowerSatuation = 0;
-	lowerRed = 0;
+	lowerRed = 160;
 
 	createTrackbar("lower hue", "hsv", &lowerHue, 180);
 	createTrackbar("lower satuation", "hsv", &lowerSatuation, 255);
 	createTrackbar("lower red", "hsv", &lowerRed, 255);
 
-	upperHue = 164;
-	upperSatuation = 164;
-	upperRed = 69;
+	upperHue = 180;
+	upperSatuation = 255;
+	upperRed = 255;
 
 	createTrackbar("upper hue", "hsv", &upperHue, 180);
 	createTrackbar("upper satuation", "hsv", &upperSatuation, 255);
