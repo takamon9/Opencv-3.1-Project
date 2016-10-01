@@ -24,4 +24,4 @@ opencv_createsamples -info ./pos/info.dat -vec ./vec/positive.vec -num 2
 
 2.
 
-opencv_traincascade -data cascade/ -vec ./vec/positive.vec -bg ./neg/ng.txt -numPos 2 -numNeg 2 -featureType HAAR -mode ALL
+opencv_traincascade -data ./cascade/ -vec ./vec/positive.vec -bg ./neg/ng.txt -numPos 2 -numNeg 2 -featureType HAAR -mode ALL
