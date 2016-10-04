@@ -1,0 +1,89 @@
+#include <Windows.h>
+#include <tchar.h>
+#include <stdio.h>
+#include <iostream>
+#include <opencv2\core\core.hpp>
+#include <opencv2\highgui\highgui.hpp>
+#include <opencv2\opencv.hpp>
+#include <string>
+#include <fstream>
+
+using namespace std;
+using namespace cv;
+
+
+
+int main(void) {
+
+	string posFileName[500];
+	Mat posSrcImage[500];
+	Mat positiveImage[500];
+	string width,height;
+	ofstream ofs("C:/cascade//pos//info.dat");
+
+	for (int i = 1; i < 50; i++){
+
+		posFileName[i] = to_string(i) + ".png";
+
+		posSrcImage[i] = imread("C:/cascade//pos//" + posFileName[i]);
+		width = to_string(posSrcImage[i].size().width);
+		height = to_string(posSrcImage[i].size().height);
+
+		ofs << posFileName[i] + " 1 0 0 " + width + " " + height +  "\n";
+
+	}
+
+	/*
+		HANDLE hSearch, hFile;
+		WIN32_FIND_DATA fd;
+		DWORD writeSize;
+		TCHAR filename[MAX_PATH + 10];
+
+
+		// Create new file
+		hFile = CreateFile(
+			_T("C:/cascade//pos//info.dat"), GENERIC_WRITE, 0, NULL,
+			CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL
+			);
+		if (hFile == INVALID_HANDLE_VALUE)
+		{
+			return 0;
+		}
+
+		// Find all files
+		hSearch = FindFirstFile(_T("C:/cascade//pos//*.png"), &fd);
+		if (hSearch == INVALID_HANDLE_VALUE)
+		{
+			return 0;
+		}
+
+		while (TRUE)
+		{
+
+			// Writting down files finded.
+			_tcscpy(filename, fd.cFileName); // Copy file names
+			_tcscat(filename, _T(" 1 0 0 \r\n"));   // Input end line.
+			WriteFile(
+				hFile, filename, (DWORD)(_tcslen(filename) * sizeof(TCHAR)),
+				&writeSize, NULL
+				);
+
+			if (!FindNextFile(hSearch, &fd))
+
+			{
+				if (GetLastError() == ERROR_NO_MORE_FILES)
+					break;
+				else
+					break;
+			}
+		}
+
+		FindClose(hSearch);
+		CloseHandle(hFile);
+
+		*/
+	cout << "info.dat file correctly created! Press Any Key to finish."<< endl;
+
+	system("pause");
+	return 0;
+}
