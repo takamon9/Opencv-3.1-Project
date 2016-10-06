@@ -30,7 +30,7 @@ int main(int, char**)
 
 	vector<Rect> jpnNum;
 	CascadeClassifier jpnNumPlate_cascade;
-	if (jpnNumPlate_cascade.load("./cascade.xml") == false) {  // Chek same .xml file exists in this project holder
+	if (jpnNumPlate_cascade.load("./jpn_cascade.xml") == false) {  // Chek same .xml file exists in this project holder
 		printf("cascade.load failed!! put the xml file into this project holder\n");
 		return -1;
 	}
@@ -43,7 +43,7 @@ int main(int, char**)
 			return -1;
 		}
 
-		jpnNumPlate_cascade.detectMultiScale(gray, jpnNum);
+		jpnNumPlate_cascade.detectMultiScale(gray, jpnNum,1.3);
 		Mat image = original.clone();
 		cvtColor(original, gray, CV_BGR2GRAY);
 		equalizeHist(gray, gray);
