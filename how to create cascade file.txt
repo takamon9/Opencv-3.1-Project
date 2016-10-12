@@ -50,11 +50,12 @@ In cascade folder, shift + right click to open command prompt.
 
 input command like below line.
 
-1.
+1.  create vector file 'positive.vec' in vec holder.
 
 opencv_createsamples -info ./pos/info.dat -vec ./vec/positive.vec -num 750 -w 50 -h 25
 
-2.
+2. train cascade and create cascade file 'cascade.xml' in cas holder.
 
 opencv_traincascade -data ./cascade -vec ./vec/positive.vec -bg ./neg/ng.txt -numPos 750 -numNeg 1350 -featureType LBP -mode ALL -w 50 -h 25
 
+3.put cascade file to your project holder.
