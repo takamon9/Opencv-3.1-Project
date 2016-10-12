@@ -56,4 +56,4 @@ opencv_createsamples -info ./pos/info.dat -vec ./vec/positive.vec -num 750 -w 50
 
 opencv_traincascade -data ./cascade -vec ./vec/positive.vec -bg ./neg/ng.txt -numPos 750 -numNeg 1350 -featureType LBP -mode ALL -w 50 -h 25
 
-3.put cascade file to your project holder.
+3.put cascade file 'cascade.xml' to your project holder.
