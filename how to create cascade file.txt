@@ -10,9 +10,9 @@ C:/cascade/pos
           /dat
           /cas
           
-put positive iamge files to pos folder and negative image files to neg folder.
+put positive iamge files to pos holder and negative image files to neg holder.
 
-'info.dat' file need to be exist pos folder.
+'info.dat' file need to be exist pos holder.
 So,we create info.dat file using C++ code. 
 compile and run 'Create "info.dat" file.cpp' file in my libraly.
 
@@ -27,12 +27,12 @@ created info.dat file written like below...
 1009.jpg  1  0 0 212 235
 
 next,
-we create ng.txt file in /neg folder.
+we create ng.txt file in /neg holder.
 like info.dat file,we use C++ code.
 open 'RenameFiles.cpp' in my libraly.
 run the program.
 
-and we got a ng.txt file in /neg folder.
+and we got a ng.txt file in /neg holder.
 we should input 'neg/' in front of file name. 
 like this...
 
@@ -46,7 +46,7 @@ neg/10009.jpg
 
 finally, we save ng.txt file in utf-8, not in unicode.
 
-In cascade folder, shift + right click to open command prompt.
+In cascade holder, shift + right click to open command prompt.
 
 input command like below line.
 
