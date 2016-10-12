@@ -8,19 +8,28 @@ C:/cascade/pos
           /neg
           /vec
           /dat
+          /cas
           
 put positive iamge files to pos folder and negative image files to neg folder.
 
-info.dat file need to be exist pos folder.
-So,we create info.dat file by C++ code. 
-compile 'how to create 
+'info.dat' file need to be exist pos folder.
+So,we create info.dat file using C++ code. 
+compile and run 'Create "info.dat" file.cpp' file in my libraly.
+
+created info.dat file written like below...
+
 ./pos/info.dat
 
-1004.jpg  1  334 58 485 567
-1005.jpg  1  235 173 657 574
-1006.jpg  2  318 38 103 128  179 49 136 152
-1008.jpg  1  270 81 271 365
-1009.jpg  1  816 41 212 235
+1004.jpg  1  0 0 485 567
+1005.jpg  1  0 0 657 574
+1006.jpg  1  0 0 103 128
+1008.jpg  1  0 0 271 365
+1009.jpg  1  0 0 212 235
+
+next,
+we create ng.txt file in /neg folder.
+like info.dat file,we use C++ code.
+open 
 
 ./neg/ng.txt
 
