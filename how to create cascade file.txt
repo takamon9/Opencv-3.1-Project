@@ -45,9 +45,7 @@ neg/10008.jpg
 neg/10009.jpg
 
 finally, we save ng.txt file in utf-8, not in unicode.
-
 In cascade holder, shift + right click to open command prompt.
-
 input command like below line.
 
 1.  create vector file 'positive.vec' in vec holder.
