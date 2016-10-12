@@ -7,7 +7,6 @@ like below...
 C:/cascade/pos
           /neg
           /vec
-          /dat
           /cas
           
 put positive iamge files to pos holder and negative image files to neg holder.
