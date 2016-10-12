@@ -1,7 +1,19 @@
-How to create opencv cascade samples.
+How to create opencv cascade files.
 
 exp.
 
+Before create cascade,we create storage folder.
+like below...
+C:/cascade/pos
+          /neg
+          /vec
+          /dat
+          
+put positive iamge files to pos folder and negative image files to neg folder.
+
+info.dat file need to be exist pos folder.
+So,we create info.dat file by C++ code. 
+compile 'how to create 
 ./pos/info.dat
 
 1004.jpg  1  334 58 485 567
