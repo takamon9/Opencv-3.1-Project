@@ -15,7 +15,8 @@ put positive iamge files to pos holder and negative image files to neg holder.
 So,we create info.dat file using C++ code. 
 compile and run 'Create "info.dat" file.cpp' file in my libraly.
 
-created info.dat file written like below...
+then created info.dat file written like below...
+and,we save the file by ANSI code,not unicode or ust-8.
 
 ./pos/info.dat
 
