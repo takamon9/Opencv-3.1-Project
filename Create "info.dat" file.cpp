@@ -14,6 +14,8 @@ using namespace cv;
 
 // You have to install OpenCv 2.4.x or later version 3.x to compile this code. 
 // Also,info.dat shoud be saved by ANSI Code,not by unicode or UTF-8.
+// In this code, your png image files put into the directory :"C:/numSets/num_0/pos/***.png"
+// 0 as variable number.
 
 int main(void) {
 
