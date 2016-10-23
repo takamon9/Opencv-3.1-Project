@@ -23,7 +23,7 @@ int main(void) {
 	string width, height;
 
 	string fnum = "num_4"; //Change this num "num_x"
-	int fileNumber = 234; //Input File Number
+	int fileNumber = 234; //Input totall number of Files.
 
 	ofstream ofs("C:/numSets/" + fnum + "/pos/info.dat");
 	int a = 1;
