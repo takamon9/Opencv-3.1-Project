@@ -60,7 +60,7 @@ int main()
 			d = 255 * (1 - number_data.at<float>(j, i));
 			rectangle(training_image, pt1, pt2, Scalar(d), -1);
 		}
-	imshow("訓練用データ", training_image);
+	imshow("Training Data", training_image);
 
 	Mat teacher = Mat(Size(10, 10), CV_32F);
 	for(int j = 0; j < teacher.rows ; j++)
@@ -69,14 +69,16 @@ int main()
 			if (i == j) teacher.at<float>(j, i) = 1.0f;
 			else teacher.at<float>(j, i) = 0.0f;	
 		}
+	imshow("teacher", teacher);
+
 	neuron->train(number_data, ROW_SAMPLE, teacher);
 
 	Mat test_data;
 	Mat results;
 	cout << fixed << right;
 	cout << endl;
-	cout << "      RPROP ニューラルネットワーク出力				" << endl;
-	cout << " 入力   0      1      2     3      4      5      6      7      8      9" << endl;
+	cout << "      RPROP Neural Network Output				" << endl;
+	cout << " Input   0      1      2     3      4      5      6      7      8      9" << endl;
 	for (int i = 0; i < N_OUTPUT; i++)
 	{
 		test_data = number_data.row(i);
@@ -89,13 +91,13 @@ int main()
 		cout << endl;
 
 	}
-
+	imshow("result", results);
 	double Max_value;
 	Point max_location;
 	cout << fixed << right;
 	cout << endl;
-	cout << "入力   判定結果　　出力値" << endl;
-	cout << "---- ---------- -------" << endl;
+	cout << "Input   Prediction　　Value" << endl;
+	cout << "------ ---------- ----------" << endl;
 	for (int i = 0; i < N_OUTPUT; i++)
 	{
 		test_data = number_data.row(i);
