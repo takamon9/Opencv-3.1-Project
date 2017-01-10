@@ -1,9 +1,14 @@
+///////////////////////////////////////////////////////////////
+//How to get Opencv Mat image into .NET Framework pictureBox.//
+///////////////////////////////////////////////////////////////
 
+//First,you should Mat convert to CV_32S.
 
 Mat src = Mat(x,y,CV_32S);//
 //OR
 cvtcolor(src,dst,CV_32S);
 
+//Function to convert image.
 
 void DrawCVImage(System::Windows::Forms::Control^ control, cv::Mat& colorImage)
 {
@@ -16,5 +21,6 @@ void DrawCVImage(System::Windows::Forms::Control^ control, cv::Mat& colorImage)
 	delete graphics;
 }
 
+//code to exchange.
 
 DrawCVImage(pictureBox1,dst);
